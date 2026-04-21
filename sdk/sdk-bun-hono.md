@@ -2,17 +2,17 @@
 
 Server-side helpers for streaming Datastar SSE responses from a Hono app running on Bun.
 
-## `datastar.stream(c, callback, options?)`
+## `ServerSentEventGenerator.stream(c, callback, options?)`
 
-Creates an SSE streaming response and provides a `DatastarStreamingApi` instance to the callback.
+Creates an SSE streaming response and provides a `ServerSentEventGenerator` instance to the callback.
 
 ```ts
-import { datastar } from './datastar';
+import { ServerSentEventGenerator } from 'datastar-sdk';
 
 app.get('/api/stream', (c) => {
-  return datastar.stream(c, async (dsa) => {
-    await dsa.patchSignals({ signals: { count: 1 } });
-    await dsa.patchElements({ elements: '<div id="output">Hello</div>' });
+  return ServerSentEventGenerator.stream(c, async (sse) => {
+    await sse.patchSignals({ signals: { count: 1 } });
+    await sse.patchElements({ elements: '<div id="output">Hello</div>' });
   });
 });
 ```
@@ -23,9 +23,9 @@ app.get('/api/stream', (c) => {
 |--------|------|-------------|
 | `heartbeatInterval` | `number` | Interval in ms between keep-alive heartbeat comments |
 
-## `datastar.readSignals(c)`
+## `ServerSentEventGenerator.readSignals(c)`
 
-Reads Datastar signals from the request. For `GET` requests, reads from the `datastar` query parameter. For other methods, reads from the JSON body.
+Reads Datastar signals from the request. For `GET` and `DELETE` requests, reads from the `datastar` query parameter. For other methods, reads from the JSON body.
 
 Returns a discriminated union:
 
@@ -39,23 +39,23 @@ Returns a discriminated union:
 
 ```ts
 app.post('/api/action', async (c) => {
-  const result = await datastar.readSignals(c);
+  const result = await ServerSentEventGenerator.readSignals(c);
   if (!result.success) return c.text(result.error, 400);
   const { signals } = result;
   // use signals...
 });
 ```
 
-## `DatastarStreamingApi`
+## `ServerSentEventGenerator` (instance methods)
 
-Instance provided to the `datastar.stream()` callback. All methods return `Promise<void>`.
+The instance provided to the `ServerSentEventGenerator.stream()` callback. All methods return `Promise<void>`.
 
 ### `patchSignals({ signals, options? })`
 
 Sends a `datastar-patch-signals` SSE event to update client-side signals.
 
 ```ts
-await dsa.patchSignals({
+await sse.patchSignals({
   signals: { count: 42, name: 'Dave' },
   options: {
     onlyIfMissing: true, // only set signals not already present
@@ -76,7 +76,7 @@ await dsa.patchSignals({
 Sends a `datastar-patch-elements` SSE event to update DOM content.
 
 ```ts
-await dsa.patchElements({
+await sse.patchElements({
   elements: '<div id="output">Updated</div>',
   options: {
     mode: 'inner',
@@ -113,7 +113,7 @@ await dsa.patchElements({
 Appends a `<script>` tag to the body via `patchElements`. By default, the script auto-removes itself after execution.
 
 ```ts
-await dsa.executeScript({
+await sse.executeScript({
   script: 'console.log("hello from server")',
   options: {
     autoRemove: false,   // keep the script tag in the DOM
@@ -134,14 +134,14 @@ await dsa.executeScript({
 Sends an SSE comment (`: heartbeat`) to keep the connection alive.
 
 ```ts
-await dsa.heartbeat();
+await sse.heartbeat();
 ```
 
 ## Full Example
 
 ```ts
 import { Hono } from 'hono';
-import { datastar } from './datastar';
+import { ServerSentEventGenerator } from 'datastar-sdk';
 
 const app = new Hono();
 
@@ -160,14 +160,14 @@ app.get('/', (c) => {
 });
 
 app.post('/api/increment', async (c) => {
-  const result = await datastar.readSignals(c);
+  const result = await ServerSentEventGenerator.readSignals(c);
   if (!result.success) return c.text(result.error, 400);
 
   const count = (result.signals.count as number) + 1;
 
-  return datastar.stream(c, async (dsa) => {
-    await dsa.patchSignals({ signals: { count } });
-    await dsa.patchElements({
+  return ServerSentEventGenerator.stream(c, async (sse) => {
+    await sse.patchSignals({ signals: { count } });
+    await sse.patchElements({
       elements: `<span id="count">${count}</span>`,
     });
   });
