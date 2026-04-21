@@ -19,6 +19,7 @@ Binds an event listener to an element, executing an expression when the event fi
 | `__prevent` | Calls `preventDefault` |
 | `__stop` | Calls `stopPropagation` |
 | `__window` | Attaches listener to `window` |
+| `__document` | Attaches listener to `document` (for events that don't bubble) |
 | `__outside` | Triggers when event occurs outside the element |
 | `__case.camel` / `.kebab` / `.snake` / `.pascal` | Converts event name casing |
 | `__delay.Nms` / `__delay.Ns` | Delays execution |

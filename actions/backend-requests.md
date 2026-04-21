@@ -27,13 +27,14 @@
 | `retryScaler` | `number` | `2` | Multiplier for exponential backoff |
 | `retryMaxWaitMs` | `number` | `30000` | Maximum wait between retries (ms) |
 | `retryMaxCount` | `number` | `10` | Maximum retry attempts |
-| `requestCancellation` | `string \| AbortController` | `'auto'` | `'auto'`, `'disabled'`, or an `AbortController` |
+| `requestCancellation` | `string \| AbortController` | `'auto'` | `'auto'`, `'cleanup'`, `'disabled'`, or an `AbortController` |
 
 ## Request Cancellation
 
-By default (`'auto'`), a new fetch on an element cancels any existing request on that same element. Requests on different elements run concurrently.
+By default (`'auto'`), a new fetch on an element cancels any existing request on that same element. Requests on different elements run concurrently. Fetches are no longer aborted automatically when the initiating element is removed from the DOM — use `'cleanup'` to opt into that behavior.
 
 - `'auto'` — Cancels previous request on the same element
+- `'cleanup'` — Same as `'auto'`, and also cancels the request when the element or attribute is cleaned up
 - `'disabled'` — Allows concurrent requests from the same element
 - `AbortController` — Manual control over cancellation
 
